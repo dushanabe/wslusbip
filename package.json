@@ -3,7 +3,7 @@
   "displayName": "USBIP Connect",
   "description": "Simple way to attached USB device to WSL using usbipd",
   "version": "0.0.1",
-  "publisher": "CreativeDodos",
+  "publisher": "TheCreativeDodo",
   "license": "MIT",
   "repository": {
     "type": "git",
