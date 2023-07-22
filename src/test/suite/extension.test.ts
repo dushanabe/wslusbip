@@ -19,11 +19,11 @@ suite('Extension Test Suite', () => {
 	`;
 
 	test('Parsing test', () => {
-		let parsedDevices = myExtension.parseUSBDevices(inputString);
-		assert.strictEqual(parsedDevices.length, 7);
+		const parsedDevices = myExtension.parseUSBDevices(inputString.trim());
+		assert.strictEqual(parsedDevices.length, 6);
 		assert.strictEqual(parsedDevices[0].busID, '1-2');
 		assert.strictEqual(parsedDevices[0].state, 'Not attached');
-		assert.strictEqual(parsedDevices[6].busID, '1-3');
-		assert.strictEqual(parsedDevices[6].state, 'Attached - Ubuntu-22.04');
+		assert.strictEqual(parsedDevices[5].busID, '1-3');
+		assert.strictEqual(parsedDevices[5].state, 'Attached - Ubuntu-22.04');
 	});
 });
