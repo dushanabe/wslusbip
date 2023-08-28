@@ -4,122 +4,100 @@ import { promisify } from 'util';
 
 const exec = promisify(require('child_process').exec);
 
-interface USBDevice {
-	busID: string;
-	vidPid: string;
-	device: string;
-	state: string;
+interface UsbDevice {
+	BusId: string | null;
+	ClientIPAddress: string | null;
+	ClientWslInstance: string | null;
+	Description: string;
+	InstanceId: string;
+	IsForced: boolean;
+	PersistedGuid: string | null;
+	StubInstanceId: string | null;
 }
 
-export function parseUSBDevices(inputString: string): USBDevice[] {
-	const lines = inputString.split('\n').map((line) => line.trim()).filter(Boolean);
-	const headers = lines.shift()?.split(/\s{2,}/).map((header) => header.trim()) || [];
-	const usbDevices: USBDevice[] = [];
+interface UsbDeviceList {
+	Devices: UsbDevice[];
+}
 
-	for (const line of lines) {
-		const data = line.split(/\s{2,}/);
-		const usbDevice: USBDevice = {
-			busID: data[0].trim(),
-			vidPid: data[1].trim(),
-			device: data[2].trim(),
-			state: data[3].trim(),
-		};
-		usbDevices.push(usbDevice);
+export function parseUSBDevices(inputString: string): UsbDeviceList | undefined {
+	const fixedInputString = inputString.replace(/\\/g, "\\\\");
+  try {
+    console.log(fixedInputString);
+    const parsedData: UsbDeviceList = JSON.parse(fixedInputString);
+    // Now you can work with the filtered data
+    console.log(parsedData);
+
+    // Remove devices with null BusId
+    const filteredDevices: UsbDeviceList = {
+      Devices: parsedData.Devices.filter(
+        (device) => device.BusId !== null
+      ),
+    };
+    return filteredDevices;
+  } catch (error) {
+    console.error("Error parsing JSON:", error);
+  }
+}
+
+var getUsbipList = async function getUsbipList(): Promise<UsbDeviceList> {
+	// Exec output contains both stderr and stdout outputs, use usbipd state instead
+	const deviceliststr = await exec('usbipd.exe state');
+
+	var devices = parseUSBDevices(deviceliststr.stdout.trim());
+	if(devices === undefined)
+	{
+		vscode.window.showErrorMessage('Error while parsing USB device list.');
+		devices = {Devices: []};
 	}
-
-	return usbDevices;
-}
-
-var getUsbipList = async function getUsbipList() {
-	// Exec output contains both stderr and stdout outputs
-	const deviceliststr = await exec('usbipd.exe wsl list');
-
-	/* 
-	*  The output of the command is a string parse it to get the device list
-	*  example output:
-	* BUSID  VID:PID    DEVICE                                                        STATE
-	* 1-2    1462:7d25  USB Input Device                                              Not attached
-	*/
-
-	// Parse the output to get the device list
-	const devices = parseUSBDevices(deviceliststr.stdout.trim());
-	console.log(devices);
-
-	return {
-		devices: devices
-	};
+	return devices;
 };
 
-async function checkAttachedDevices(): Promise<USBDevice[]> {
-	let attachedDevices: USBDevice[] = [];
-	try {
-	  const liststr: any = await getUsbipList();
-	  const parsedDevices = liststr.devices;
-  
-	  if (parsedDevices.length === 0) {
-		// No devices attached
-	  } else {
-		for (const device of parsedDevices) {
-		  if (device.state.includes("Attached")) {
-			attachedDevices.push(device);
-		  }
-		}
-	  }
-	} catch (error) {
-	  // Handle any errors that occurred during the getUsbipList() operation
-	  console.error("Error checking attached device:", error);
-	}
+async function checkAttachedDevices(): Promise<UsbDeviceList> {
+	const devices = await getUsbipList();;
+
+	const attachedDevices: UsbDeviceList = {
+		Devices: devices.Devices.filter(device => device.ClientWslInstance !== null),
+	  };
   
 	return attachedDevices;
   }
 
 function showUSBDevices(): Thenable<vscode.QuickPickItem | undefined> {
-	return getUsbipList().then((liststr: any) => {
-		const parsedDevices = liststr.devices;
-
-		if (parsedDevices.length === 0) {
-			vscode.window.showInformationMessage('No USB devices found.');
-			return Promise.resolve(undefined);
-		}
-
-		const items: vscode.QuickPickItem[] = parsedDevices.map((device: USBDevice) => ({
-			label: `${device.busID}`,
-			description: device.device,
-			detail: device.state,
-		}));
-
-		return vscode.window.showQuickPick(items, { canPickMany: false, placeHolder: 'Select a USB Device' });
+	return getUsbipList().then(devices => {
+	  if (devices.Devices.length === 0) {
+		vscode.window.showInformationMessage('No USB devices found.');
+		return Promise.resolve(undefined);
+	  }
+  
+	  const items: vscode.QuickPickItem[] = devices.Devices.map((device: UsbDevice) => ({
+		label: `${device.BusId}`,
+		description: device.Description,
+		detail: device.ClientWslInstance || '', // Add the detail property if needed
+	  }));
+  
+	  return vscode.window.showQuickPick(items, { canPickMany: false, placeHolder: 'Select a USB Device' });
 	});
-}
+  }
 
-function showAttachedUSBDevices(): Thenable<vscode.QuickPickItem | undefined> {
-	return getUsbipList().then((liststr: any) => {
-		const parsedDevices = liststr.devices;
-
-		if (parsedDevices.length === 0) {
-			vscode.window.showInformationMessage('No USB devices found.');
-			return Promise.resolve(undefined);
-		}
-
-		// Check if any device is attached
-		let attachedDevices: USBDevice[] = [];
-		for (const device of parsedDevices) {
-			if (device.state.includes("Attached")) {
-				attachedDevices.push(device);
-			}
-		}
-
-		const items: vscode.QuickPickItem[] = attachedDevices.map((device: USBDevice) => ({
-			label: `${device.busID}`,
-			description: device.device,
-			detail: device.state,
-		}));
-
-		return vscode.window.showQuickPick(items, { canPickMany: false, placeHolder: 'Select a USB Device' });
+  function showAttachedUSBDevices(): Thenable<vscode.QuickPickItem | undefined> {
+	return checkAttachedDevices().then(devices => {
+  
+	  if (devices.Devices.length === 0) {
+		vscode.window.showInformationMessage('No attached USB devices found.');
+		return Promise.resolve(undefined);
+	  }
+  
+	  const items: vscode.QuickPickItem[] = devices.Devices.map((device: UsbDevice) => ({
+		label: `${device.BusId}`,
+		description: device.Description,
+		detail: device.ClientWslInstance || '', // Use clientWslInstance as the detail
+	  }));
+  
+	  return vscode.window.showQuickPick(items, { canPickMany: false, placeHolder: 'Select an Attached USB Device' });
 	});
-}
+  }
 
-async function attachUsbToWSL(busid: string) {
+async function attachUsbToWSL(busid: string | null) {
 	try {
 		await exec(`usbipd.exe wsl attach --busid=${busid}`);
 	} catch (error) {
@@ -127,7 +105,7 @@ async function attachUsbToWSL(busid: string) {
 	}
 }
 
-async function detachUsbFromWSL(busid: string) {
+async function detachUsbFromWSL(busid: string | null) {
 	// Exec output contains both stderr and stdout outputs
 	try {
 		await exec(`usbipd.exe wsl detach --busid=${busid}`);
@@ -151,7 +129,7 @@ export function activate(context: vscode.ExtensionContext) {
 	detachBarItem.hide();
 
 	checkAttachedDevices().then((attachedDevices) => {
-		if (attachedDevices.length > 0) {
+		if (attachedDevices.Devices.length > 0) {
 			detachBarItem.show();
 		}
 	});
@@ -170,12 +148,12 @@ export function activate(context: vscode.ExtensionContext) {
 
 	let cmdDetach = vscode.commands.registerCommand('uspip-connect.Detach', () => {
 		checkAttachedDevices().then((attachedDevices) => {
-			if (attachedDevices.length === 1) {
-				vscode.window.showInformationMessage(`Detaching device: ${attachedDevices[0].device}`);
-				detachUsbFromWSL(attachedDevices[0].busID);
+			if (attachedDevices.Devices.length === 1) {
+				vscode.window.showInformationMessage(`Detaching device: ${attachedDevices.Devices[0].BusId}`);
+				detachUsbFromWSL(attachedDevices.Devices[0].BusId);
 				detachBarItem.hide();
 			}
-			else if(attachedDevices.length > 1){
+			else if(attachedDevices.Devices.length > 1){
 				showAttachedUSBDevices().then((selectedItem) => {
 					if (selectedItem) {
 						vscode.window.showInformationMessage(`Device: ${selectedItem.label} (${selectedItem.description}) detached.`);
@@ -187,6 +165,7 @@ export function activate(context: vscode.ExtensionContext) {
 			}
 			else{
 				vscode.window.showInformationMessage('No USB device attached.');
+				detachBarItem.hide();
 			}
 		});
 	});
