@@ -14,7 +14,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": null,
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "Unknown USB Device (Device Descriptor Request Failed)",
 			"InstanceId": "USB\\VID_0000&PID_0002\\5&323A54A6&0&8",
 			"IsForced": true,
@@ -24,7 +23,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": "3-2",
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "Logi C615 HD WebCam",
 			"InstanceId": "USB\\VID_046D&PID_082C\\A3653020",
 			"IsForced": false,
@@ -34,7 +32,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": "3-4",
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "USB Input Device",
 			"InstanceId": "USB\\VID_046D&PID_C343\\01EDBCD8",
 			"IsForced": false,
@@ -44,7 +41,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": null,
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "CP2102N USB to UART Bridge Controller",
 			"InstanceId": "USB\\VID_10C4&PID_EA60\\A845D1285219EC11B5F43CBFF95A09B1",
 			"IsForced": false,
@@ -54,7 +50,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": "1-2",
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "USB Input Device",
 			"InstanceId": "USB\\VID_1462&PID_7D25\\A02021081203",
 			"IsForced": false,
@@ -64,7 +59,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": null,
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "USB Mass Storage Device",
 			"InstanceId": "USB\\VID_14CD&PID_1212\\121220160204",
 			"IsForced": false,
@@ -74,7 +68,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": "1-20",
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "USB Attached SCSI (UAS) Mass Storage Device",
 			"InstanceId": "USB\\VID_152D&PID_1561\\MSFT30DB9876543214E",
 			"IsForced": false,
@@ -84,7 +77,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": "3-3",
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "USB Input Device, Razer Mamba Elite",
 			"InstanceId": "USB\\VID_1532&PID_006C\\6&28CD5A7F&0&3",
 			"IsForced": false,
@@ -94,7 +86,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": null,
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "USB Serial Device (COM4), USB Serial Device (COM3)",
 			"InstanceId": "USB\\VID_2E8A&PID_0006\\E66058388310712E",
 			"IsForced": false,
@@ -104,7 +95,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": "1-8",
 			"ClientIPAddress": "172.23.93.103",
-			"ClientWslInstance": "Ubuntu-22.04",
 			"Description": "USB Serial Device (COM5), USB JTAG/serial debug unit",
 			"InstanceId": "USB\\VID_303A&PID_1001\\34:85:18:71:79:34",
 			"IsForced": false,
@@ -114,7 +104,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": null,
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "USB Serial Device (COM7), USB JTAG/serial debug unit",
 			"InstanceId": "USB\\VID_303A&PID_1001\\7C:DF:A1:E2:64:CC",
 			"IsForced": false,
@@ -124,7 +113,6 @@ suite('Extension Test Suite', () => {
 		  {
 			"BusId": "4-3",
 			"ClientIPAddress": null,
-			"ClientWslInstance": null,
 			"Description": "Intel(R) Wireless Bluetooth(R)",
 			"InstanceId": "USB\\VID_8087&PID_0032\\6&5B147F5&0&3",
 			"IsForced": false,
