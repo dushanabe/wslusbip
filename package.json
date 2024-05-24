@@ -37,7 +37,17 @@
         "command": "uspip-connect.Detach",
         "title": "USBIP Detach USB device from WSL"
       }
-    ]
+    ],
+    "configuration":{
+      "title": "USB IP Daemon",
+      "properties": {
+        "usbip-connect.usbipdPath": {
+          "type": "string",
+          "default": "upsipd.exe",
+          "description": "absolute path to usbipd.exe"
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
