@@ -2,7 +2,7 @@
   "name": "usbip-connect",
   "displayName": "USBIP Connect",
   "description": "Simple way to attached USB device to WSL using usbipd",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "publisher": "thecreativedodo",
   "license": "MIT",
   "repository": {
@@ -39,11 +39,11 @@
       }
     ],
     "configuration":{
-      "title": "USB IP Daemon",
+      "title": "USBIP Daemon",
       "properties": {
         "usbip-connect.usbipdPath": {
           "type": "string",
-          "default": "upsipd.exe",
+          "default": "usbipd.exe",
           "description": "absolute path to usbipd.exe"
         }
       }

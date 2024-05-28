@@ -212,7 +212,7 @@ export function activate(context: vscode.ExtensionContext) {
   // determine path to usbipd.exe from workspace settings
   const config = vscode.workspace.getConfiguration('usbip-connect');
   const setting = config.get<string>('usbipdPath');
-  execUsbIpdPath = `'${setting || 'usbipd.exe'}'`;
+  execUsbIpdPath = `${setting || 'usbipd.exe'}`;
 
   checkUSBIPDVersion().then((version) => {
     // Check if version is 4.0.0 or greater

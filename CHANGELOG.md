@@ -1,4 +1,6 @@
 # Change Log
+## [0.4.0]
+- Added ability to set an absolute path to usbipd.exe in extension config.
 ## [0.3.0]
 - Added support for usbipd version 4.x.x
 - UsbIPD version is checked at the start of vscode to provide backward compatibility with version 3.x.x
