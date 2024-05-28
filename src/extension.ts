@@ -1,8 +1,13 @@
 import * as vscode from "vscode";
 
 import { promisify } from "util";
+import { exec } from "child_process";
 
-const exec = promisify(require("child_process").exec);
+const execP = promisify(exec);
+
+let execUsbIpdPath = 'usbipd.exe';
+
+const execUsbIpd = (args: string) => execP(`${execUsbIpdPath} ${args}`);
 
 /**
  * Represents a USBIP device returnt from state command.
@@ -53,7 +58,7 @@ export function parseUSBDevices(
  */
 var getUsbipList = async function getUsbipList(): Promise<UsbDeviceList> {
   // Exec output contains both stderr and stdout outputs, use usbipd state instead
-  const deviceliststr = await exec("usbipd.exe state");
+  const deviceliststr = await execUsbIpd("state");
 
   var devices = parseUSBDevices(deviceliststr.stdout.trim());
   if (devices === undefined) {
@@ -64,7 +69,7 @@ var getUsbipList = async function getUsbipList(): Promise<UsbDeviceList> {
 };
 
 async function checkUSBIPDVersion(): Promise<string> {
-  const deviceliststr = await exec("usbipd.exe --version");
+  const deviceliststr = await execUsbIpd("--version");
   // format : 4.0.0+182.Branch.master.Sha.2ffe37ec799b9e73eb9d23d051d980fefb616ce1
   // split on first + and return first part
   return deviceliststr.stdout.trim().split("+")[0];
@@ -151,13 +156,13 @@ function showAttachedUSBDevices(): Thenable<vscode.QuickPickItem | undefined> {
  * Attaches a USB device to WSL using the specified bus ID.
  * @param busid The bus ID of the USB device to attach.
  */
-async function attachUsbToWSL(cmd: string | undefined, busid: string | null):  Promise<boolean> {
+async function attachUsbToWSL(args: string | undefined, busid: string | null):  Promise<boolean> {
   try {
-    if (cmd === undefined) {
-      vscode.window.showErrorMessage("Error while attaching USB device: USBIPD command not set");
+    if (args === undefined) {
+      vscode.window.showErrorMessage("Error while attaching USB device: USBIPD args not set");
       return false;
     }
-    await exec(`${cmd} --busid=${busid}`);
+    await execUsbIpd(`${args} --busid=${busid}`);
   } catch (error) {
     vscode.window.showErrorMessage("Error while attaching USB device:" + error);
     return false;
@@ -170,14 +175,14 @@ async function attachUsbToWSL(cmd: string | undefined, busid: string | null):  P
  * 
  * @param busid The bus ID of the USB device to detach.
  */
-async function detachUsbFromWSL(cmd: string | undefined, busid: string | null) {
+async function detachUsbFromWSL(args: string | undefined, busid: string | null) {
   // Exec output contains both stderr and stdout outputs
   try {
-    if (cmd === undefined) {
-      vscode.window.showErrorMessage("Error while detaching USB device: USBIPD command not set");
+    if (args === undefined) {
+      vscode.window.showErrorMessage("Error while detaching USB device: USBIPD args not set");
       return;
     }
-    await exec(`${cmd} --busid=${busid}`);
+    await execUsbIpd(`${args} --busid=${busid}`);
   } catch (error) {
     vscode.window.showErrorMessage("Error while detaching USB device:" + error);
   }
@@ -204,14 +209,19 @@ export function activate(context: vscode.ExtensionContext) {
   detachBarItem.tooltip = "USBIP Detach USB device from WSL";
   detachBarItem.hide();
 
+  // determine path to usbipd.exe from workspace settings
+  const config = vscode.workspace.getConfiguration('usbip-connect');
+  const setting = config.get<string>('usbipdPath');
+  execUsbIpdPath = `'${setting || 'usbipd.exe'}'`;
+
   checkUSBIPDVersion().then((version) => {
     // Check if version is 4.0.0 or greater
     if (version.split(".")[0] >= "4") {
-      context.globalState.update("uspipdAttachCmd", "usbipd.exe attach --wsl");
-      context.globalState.update("uspipdDetachCmd", "usbipd.exe detach");
+      context.globalState.update("uspipdAttachArgs", "attach --wsl");
+      context.globalState.update("uspipdDetachArgs", "detach");
     } else {
-      context.globalState.update("uspipdAttachCmd", "usbipd.exe wsl attach");
-      context.globalState.update("uspipdDetachCmd", "usbipd.exe wsl detach");
+      context.globalState.update("uspipdAttachArgs", "wsl attach");
+      context.globalState.update("uspipdDetachArgs", "wsl detach");
       // deprecation warning
       vscode.window.showWarningMessage("Your version of usbipd is will not be supported in future release. Please upgrade to version 4.0.0 or greater.");
     }
@@ -233,7 +243,7 @@ export function activate(context: vscode.ExtensionContext) {
       showUSBDevices().then((selectedItem) => {
         if (selectedItem) {
           attachUsbToWSL(
-            context.globalState.get("uspipdAttachCmd"),
+            context.globalState.get("uspipdAttachArgs"),
             selectedItem.label
           ).then(
             (result) => {
@@ -261,7 +271,7 @@ export function activate(context: vscode.ExtensionContext) {
             `Detaching device: ${attachedDevices.Devices[0].BusId}`
           );
           detachUsbFromWSL(
-            context.globalState.get("uspipdDetachCmd"),
+            context.globalState.get("uspipdDetachArgs"),
             attachedDevices.Devices[0].BusId
           );
           detachBarItem.hide();
@@ -272,7 +282,7 @@ export function activate(context: vscode.ExtensionContext) {
                 `Device: ${selectedItem.label} (${selectedItem.description}) detached.`
               );
               detachUsbFromWSL(
-                context.globalState.get("uspipdDetachCmd"),
+                context.globalState.get("uspipdDetachArgs"),
                 selectedItem.label
               );
             } else {
@@ -331,7 +341,7 @@ export function deactivate(context: vscode.ExtensionContext) {
       for (let i = 0; i < attachedDevices.Devices.length; i++) {
         console.log(attachedDevices.Devices[i].BusId);
         detachUsbFromWSL(
-          context.globalState.get("uspipdDetachCmd"),
+          context.globalState.get("uspipdDetachArgs"),
           attachedDevices.Devices[i].BusId
         );
       }
